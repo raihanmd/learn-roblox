@@ -1,6 +1,20 @@
 local PurchaseHistory = game:GetService("DataStoreService"):GetDataStore("PurchaseHistory")
 local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
 local gamePassId = 952166348
+
+local producFunctions = {
+	[2389675369] = function(player: Player)
+		local humanoid = player.Character:FindFirstChild("Humanoid")
+		if humanoid then
+			humanoid.WalkSpeed += 50
+			return true
+		end
+		return false
+	end,
+}
+
+print(MarketplaceService:GetProductInfo(2389675369, Enum.InfoType.Product))
 
 game.Players.PlayerAdded:Connect(function(player)
 	local success, hasOwnGamePass =
@@ -39,3 +53,35 @@ MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, id, s
 		print("Player " .. player.Name .. " purchased game pass " .. id)
 	end
 end)
+
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+	local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+	local productId = receiptInfo.ProductId
+
+	local receiptId = player.UserId .. "_" .. receiptInfo.PurchaseId
+
+	local success, purchased = pcall(PurchaseHistory.GetAsync, PurchaseHistory, receiptId)
+
+	if not success then
+		error("Failed to load purchase history")
+		return Enum.ProductPurchaseDecision.NotProcessed
+	end
+
+	if purchased then
+		return Enum.ProductPurchaseDecision.PurchaseAlreadyPurchased
+	end
+
+	local success, errorMessage = pcall(PurchaseHistory.SetAsync, PurchaseHistory, receiptId, true)
+	if not success then
+		warn(errorMessage)
+		return Enum.ProductPurchaseDecision.NotProcessed
+	end
+
+	local success, errorMessage = pcall(producFunctions[productId], player)
+	if not success then
+		warn(errorMessage)
+		return Enum.ProductPurchaseDecision.NotProcessed
+	end
+
+	return Enum.ProductPurchaseDecision.PurchaseGranted
+end
