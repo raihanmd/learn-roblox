@@ -16,7 +16,7 @@ local teleportOptions = Instance.new("TeleportOptions")
 teleportOptions:SetTeleportData(teleportData)
 
 TeleportService:SetTeleportGui(teleportScreen)
--- TeleportService:Teleport(place_shopId, game.Players.LocalPlayer, teleportData)
+TeleportService:Teleport(place_shopId, game.Players.LocalPlayer, teleportData)
 
--- * Teleport Async must give the player instance with table
-TeleportService:TeleportAsync(place_shopId, { game.Players.LocalPlayer }, teleportOptions)
+-- * Teleport Async must in Server, give the player instance with table
+-- TeleportService:TeleportAsync(place_shopId, { game.Players.LocalPlayer }, teleportOptions)
